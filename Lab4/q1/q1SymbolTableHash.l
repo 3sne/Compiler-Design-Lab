@@ -30,11 +30,11 @@ int gl = 1, gc = 1;
 int localizer = 0;
 
 
-//functions skeletons
+//functions skeletonsName[4], -1, gl, gc); gc += s
 void init();
 token* newToken(char lex[], char tn[], int i, int l, int c);
 symTableEntry* newSte(char l[]);
-int makeSTEForThisToken(token* currToken, int i);
+Name[4], -1, gl, gc); gc += sint makeSTEForThisToken(token* currToken, int i);
 void populateTokenIndices();
 char getScope();
 void printTokenList();
@@ -268,5 +268,5 @@ void putTokenListInFile() {
     for ( int i = 0; i < tInd; i++ ) {
         fprintf(o, "<%70s %10s %10d %10d %10d >\n", TokenList[i]->lName, TokenList[i]->tName, TokenList[i]->index, TokenList[i]->line, TokenList[i]->column);
     }
-    close(o);
+    fclose(o);
 }
