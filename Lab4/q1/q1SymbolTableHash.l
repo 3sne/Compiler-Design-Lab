@@ -268,4 +268,5 @@ void putTokenListInFile() {
     for ( int i = 0; i < tInd; i++ ) {
         fprintf(o, "<%70s %10s %10d %10d %10d >\n", TokenList[i]->lName, TokenList[i]->tName, TokenList[i]->index, TokenList[i]->line, TokenList[i]->column);
     }
+    close(o);
 }
