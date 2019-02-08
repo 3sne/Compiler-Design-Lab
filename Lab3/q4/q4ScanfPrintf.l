@@ -5,8 +5,8 @@ unsigned int nScanf     = 0;
 
 %%
 
-"printf"        {nPrintf += 1; fprintf(yyout, "scanf");}
-"scanf"         {nScanf += 1; fprintf(yyout, "printf");}
+"printf"        {nPrintf += 1; fprintf(yyout, "WRITE");}
+"scanf"         {nScanf += 1; fprintf(yyout, "READ");}
 
 %%
 

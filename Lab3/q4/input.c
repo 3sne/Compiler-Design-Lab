@@ -11,7 +11,6 @@ int main () {
    fputs("We are in 2012", fp);
    
    rewind(fp);
-   fscanf(fp, "%s %s %s %d", str1, str2, str3, &year);
    
    scanf("Read String1 |%s|\n", str1 );
    printf("Read String2 |%s|\n", str2 );
