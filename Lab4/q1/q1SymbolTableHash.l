@@ -34,7 +34,7 @@ int localizer = 0;
 void init();
 token* newToken(char lex[], char tn[], int i, int l, int c);
 symTableEntry* newSte(char l[]);
-Name[4], -1, gl, gc); gc += sint makeSTEForThisToken(token* currToken, int i);
+int makeSTEForThisToken(token* currToken, int i);
 void populateTokenIndices();
 char getScope();
 void printTokenList();
