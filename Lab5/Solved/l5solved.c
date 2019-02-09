@@ -18,14 +18,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-token* TokenList[256];
+int matchFlag = 1;
 token* lookahead;
-int ctInd = 0, tInd = 0;
 
 void proc_t();
 void proc_e();
-void setupTokenList();
-void printTokenList();
 
 int main () {
     setupTokenList();
@@ -35,51 +32,33 @@ int main () {
 }
 
 void proc_e() {
-    lookahead = TokenList[ctInd++];
+    lookahead = getNextToken();
 
     if (strcmp(lookahead->tName, "NUMBER") == 0 ) {
         proc_t();
     } else {
+        matchFlag = 0;
         printf("Error\n");
     }
 
-    if (tInd == ctInd) {
+    if ( strcmp(lookahead->tName, "EOF") == 0 && matchFlag == 1) {
         printf("Success (Match)\n");
     } else {
-        printf("Error\n");
+        matchFlag = 0;
+        printf("Failure (No Match)\n");
     } 
 }
 
 void proc_t() {
-    lookahead = TokenList[ctInd++];
+    lookahead = getNextToken();
     if ( strcmp(lookahead->tName, "MUL") == 0) {
-        lookahead = TokenList[ctInd++];
+        lookahead = getNextToken();
         if( strcmp(lookahead->tName, "NUMBER") == 0 ) {
-            lookahead = TokenList[ctInd++];
+            lookahead = getNextToken();
             proc_t();
         } else {
+            matchFlag = 0;
             printf("Error\n");
         }
-    }
-}
-
-void setupTokenList() {
-    //setup token list from tokens.txt
-    char lex[256], tok[256];
-    int index, line, col;
-    FILE* f = fopen("tokens.txt", "r");
-    fscanf(f, "%d\n", &tInd);
-    for ( int i = 0; i < tInd; i++ ) {
-        fscanf(f, "%s %s %d %d %d\n", lex, tok, &index, &line, &col);
-        TokenList[i] = newToken(lex, tok, index, line, col);
-    }
-}
-
-void printTokenList() {
-    printf("\n");
-    printf("      LEX  |   TOKEN   | INDEX | LN | COL  \n");
-    printf("-----------------------------------------------\n");
-    for ( int i = 0; i < tInd; i++ ) {
-        printf("<%10s %10s %6d %3d %3d >\n", TokenList[i]->lName, TokenList[i]->tName, TokenList[i]->index, TokenList[i]->line, TokenList[i]->column);
     }
 }
