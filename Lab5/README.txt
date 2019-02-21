@@ -8,3 +8,10 @@ Usage:
                   -------------
     tokens.txt -> |thisProgram| -> Success/Failure
                   -------------
+
+
+Implementation reference notes:
+    if epsilon is an option, that function will retract if not returned ( `return` only when accepts )
+    if epsilon is not an option, error on mismatch.
+    if production has atleast 1 terminal, do lookahead in the function, else no need.
+    good practice to manually `return` when accept completes in a function
