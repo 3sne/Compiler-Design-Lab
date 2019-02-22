@@ -88,7 +88,7 @@ void F() {
         } else {
             matchFlag = 0;
         } 
-    } else if ( strcmp(lookahead->lName, "id") == 0 ) {
+    } else if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 ) {
         return;
     } else {
         matchFlag = 0;

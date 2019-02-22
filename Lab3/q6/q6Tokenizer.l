@@ -95,9 +95,9 @@ void printTokenList() {
 }
 
 void putTokenListInFile() {
-    FILE *o = fopen("tokens1.txt", "w");
+    FILE *o = fopen("tokens.txt", "w");
     fprintf(o, "%d", tInd);
-    for ( int i = 0\n; i < tInd; i++ ) {
+    for ( int i = 0; i < tInd; i++ ) {
         fprintf(o, "%s %s %d %d %d\n", TokenList[i]->lName, TokenList[i]->tName, TokenList[i]->index, TokenList[i]->line, TokenList[i]->column);
     }
     fclose(o);
