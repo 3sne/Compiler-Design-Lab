@@ -22,7 +22,7 @@
         addop           :=   + | -
         relop           :=   ==|!=|<=|>=|>|<
         statement_list  :=   statement statement_list | <epsilon>
-        statement       :=   assign_stat; | decision_stat | looping_stat
+        statement       :=   assign_stat; | decision_stat | looping_stat | break;
         assign_stat     :=   id = expn
         decision_stat   :=   if ( expn ) {statement_list} dprime
         dprime          :=   else {statement_list} | <epsilon>
@@ -166,19 +166,12 @@ void label_stmt() {
         }
     } else if (strcmp(lookahead->lName, "default") == 0) {
         lookahead = getNextToken();
-        if ( strcmp(lookahead->tName, "NUMBER") == 0 ) {
-            lookahead = getNextToken();
-            if ( strcmp(lookahead->lName, ":") == 0 ) {
-                statement_list();
-                return;
-            } else {
-                matchFlag = 0;
-                reportError(lookahead, "Expected ':'");
-                return;
-            }
+        if ( strcmp(lookahead->lName, ":") == 0 ) {
+            statement_list();
+            return;
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected NUMBER");
+            reportError(lookahead, "Expected ':'");
             return;
         }
     } else {
