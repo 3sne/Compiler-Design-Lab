@@ -1,7 +1,7 @@
 /*
     @Author:        3sne ( Mukur Panchani )
     @FileName:      q2LoopParser.c
-    @Task:          Parses loop statements in C Implemented as RDP using grammar G.
+    @Task:          Parses loop statements in C. Implemented as RDP using grammar G.
     @Dependency:    token.h tokenizer.exe input.txt
 
     G:
@@ -33,6 +33,7 @@
 int matchFlag = 1;
 token* lookahead;
 
+void reportError(token* tok, char *errMsg);
 void looping_stat();    /* 1 */
 void expn();            /* 2 */
 void simple_expn();     /* 3 */
@@ -50,11 +51,33 @@ void assign_stat();     /* 14 */
 void decision_stat();   /* 15 */
 void dprime();          /* 16 */
 
+
+void reportError(token* tok, char *errMsg) {
+    char *finalStr = (char*)malloc(sizeof(char) * 1024);
+    char *lineNumber = (char*)malloc(sizeof(char) * 16);
+    char *columnNumber = (char*)malloc(sizeof(char) * 16);
+    sprintf(lineNumber, "%d", tok->line);
+    sprintf(columnNumber, "%d", tok->column);
+    strcpy(finalStr, "[!]PARSE_ERROR @ {Line:Col}={");
+    strcat(finalStr, lineNumber);
+    strcat(finalStr, ":");
+    strcat(finalStr, columnNumber);
+    strcat(finalStr, "} >> ");
+    strcat(finalStr, errMsg);
+    strcat(finalStr, " | Got: '");
+    strcat(finalStr, tok->lName);
+    strcat(finalStr, "'");
+    fprintf(stderr, "%s\n", finalStr);
+    free(finalStr);
+    free(lineNumber);
+    free(columnNumber);
+}
+
 int main () {
     setupTokenList();
     printTokenList();
     looping_stat();
-    lookahead = getNextToken(); //to confirm all tokens are acutally exhausted via EOTL. Otherwise, partial matches.
+    lookahead = getNextToken(); //to confirm all tokens are acutally exhausted via EOTL($). Otherwise, partial matches.
     if ( matchFlag && strcmp(lookahead->tName, "EOTL") == 0 ) {
         printf("Verdict: ACCEPTED.");
     } else {
@@ -80,18 +103,22 @@ void looping_stat() {
                         return;
                     } else {
                         matchFlag = 0;
+                        reportError(lookahead, "Expected '}'");
                         return;
                     }
                 } else {
                     matchFlag = 0;
+                    reportError(lookahead, "Expected '{'");
                     return;
                 }
             } else {
                 matchFlag = 0;
+                reportError(lookahead, "Expected ')'");
                 return;
             }
         } else {
             matchFlag = 0;
+            reportError(lookahead, "Expected '('");
             return;
         }
     } else if (strcmp(lookahead->lName, "for") == 0) {
@@ -114,30 +141,38 @@ void looping_stat() {
                                 return;
                             } else {
                                 matchFlag = 0;
+                                reportError(lookahead, "Expected '}'");
                                 return;
                             }
                         } else {
                             matchFlag = 0;
+                            reportError(lookahead, "Expected '{'");
+                            return;
                         }
                     } else {
                         matchFlag = 0;
+                        reportError(lookahead, "Expected ')'");
                         return;
                     }
                 } else {
                     matchFlag = 0;
+                    reportError(lookahead, "Expected ';'");
                     return;
                 }
             } else {
                 matchFlag = 0;
+                reportError(lookahead, "Expected ';'");
                 return;
             }
         } else {
             matchFlag = 0;
+            reportError(lookahead, "Expected '('");
             return;
         }
     }  else {
         matchFlag = 0;
         printf("e1\n");
+        return;
     }
 }
 
@@ -178,6 +213,7 @@ void factor() {
         return;
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected IDENTIFIER OR NUMBER");
         return;
     }
 }
@@ -202,6 +238,7 @@ void mulop() {
         return;
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected '*' or '/'");
         return;
     }
 }
@@ -226,6 +263,7 @@ void addop() {
         return;
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected '+' or '-'");
         return;
     }
 }
@@ -237,6 +275,7 @@ void relop() {
         return;
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected RELOP");
         return;
     }
 }
@@ -264,6 +303,7 @@ void statement() {
             return;
         } else { //error missing ";"
             matchFlag = 0;
+            reportError(lookahead, "Expected ';'");
             return;
         }
     } else if (strcmp(lookahead->lName, "if") == 0) {
@@ -276,6 +316,7 @@ void statement() {
         return;
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Unexpected input");
         return;
     }
 }
@@ -289,10 +330,12 @@ void assign_stat() {
             expn();
         } else {
             matchFlag = 0;
+            reportError(lookahead, "Expected '='");            
             return;
         }
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected IDENTIFIER");
         return;
     }
 }
@@ -315,22 +358,27 @@ void decision_stat() {
                         return;
                     } else {
                         matchFlag = 0;
+                        reportError(lookahead, "Expected '}'");
                         return;
                     }
                 } else {
                     matchFlag = 0;
+                    reportError(lookahead, "Expected '{'");
                     return;
                 }
             } else {
                 matchFlag = 0;
+                reportError(lookahead, "Expected ')'");
                 return;
             }
         } else {
             matchFlag = 0;
+            reportError(lookahead, "Expected '('");
             return;
         }
     } else {
         matchFlag = 0;
+        reportError(lookahead, "Expected 'if'");
         return;
     }
 }
@@ -347,10 +395,12 @@ void dprime() {
                 return;
             } else {
                 matchFlag = 0;
+                reportError(lookahead, "Expected '}'");
                 return;
             }
         } else {
             matchFlag = 0;
+            reportError(lookahead, "Expected '{'");
             return;
         }
         return;
