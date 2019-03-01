@@ -186,85 +186,65 @@ void looping_stat() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "while") == 0 ) {
         lookahead = getNextToken();
-        if (strcmp(lookahead->lName, "(") == 0) {
-            expn();
-            lookahead = getNextToken();
-            if (strcmp(lookahead->lName, ")") == 0) {
-                lookahead = getNextToken();
-                if (strcmp(lookahead->lName, "{") == 0) {
-                    statement_list();
-                    lookahead = getNextToken();
-                    if (strcmp(lookahead->lName, "}") == 0) {
-                        return;
-                    } else {
-                        matchFlag = 0;
-                        reportError(lookahead, "Expected '}'");
-                        return;
-                    }
-                } else {
-                    matchFlag = 0;
-                    reportError(lookahead, "Expected '{'");
-                    return;
-                }
-            } else {
-                matchFlag = 0;
-                reportError(lookahead, "Expected ')'");
-                return;
-            }
-        } else {
+        if (strcmp(lookahead->lName, "(") != 0) {
             matchFlag = 0;
             reportError(lookahead, "Expected '('");
-            return;
         }
+        expn();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ")") != 0) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected ')'");
+        }
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "{") != 0) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected '{'");
+        }
+        statement_list();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "}") != 0) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected '}'");
+        }
+        return;
     } else if (strcmp(lookahead->lName, "for") == 0) {
         lookahead = getNextToken();
-        if (strcmp(lookahead->lName, "(") == 0 ) {
-            assign_stat();
-            lookahead = getNextToken();
-            if (strcmp(lookahead->lName, ";") == 0 ) {
-                expn();
-                lookahead = getNextToken();
-                if (strcmp(lookahead->lName, ";") == 0 ) {
-                    assign_stat();
-                    lookahead = getNextToken();
-                    if (strcmp(lookahead->lName, ")") == 0 ) {
-                        lookahead = getNextToken();
-                        if (strcmp(lookahead->lName, "{") == 0 ) {
-                            statement_list();
-                            lookahead = getNextToken();
-                            if (strcmp(lookahead->lName, "}") == 0 ) {
-                                return;
-                            } else {
-                                matchFlag = 0;
-                                reportError(lookahead, "Expected '}'");
-                                return;
-                            }
-                        } else {
-                            matchFlag = 0;
-                            reportError(lookahead, "Expected '{'");
-                            return;
-                        }
-                    } else {
-                        matchFlag = 0;
-                        reportError(lookahead, "Expected ')'");
-                        return;
-                    }
-                } else {
-                    matchFlag = 0;
-                    reportError(lookahead, "Expected ';'");
-                    return;
-                }
-            } else {
-                matchFlag = 0;
-                reportError(lookahead, "Expected ';'");
-                return;
-            }
-        } else {
+        if (strcmp(lookahead->lName, "(") != 0 ) {
             matchFlag = 0;
             reportError(lookahead, "Expected '('");
-            return;
         }
-    }  else {
+        assign_stat();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ";") != 0 ) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected ';'");
+        }
+        expn();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ";") != 0 ) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected ';'");
+        }
+        assign_stat();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ")") != 0 ) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected ')'");
+        }
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "{") != 0 ) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected '{'");
+        }
+        statement_list();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "}") != 0 ) {
+            matchFlag = 0;
+            reportError(lookahead, "Expected '}'");
+        }
+        return;
+    } else {
         matchFlag = 0;
         printf("e2\n");
         return;
