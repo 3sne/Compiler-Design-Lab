@@ -3,7 +3,7 @@
     @FileName:      MalnourishedCParser.c
     @Task:          Parses a very simple C program. Implemented as RDP using grammar G.
     @Dependency:    token.h tokenizer.exe input.txt
-    @To-Do:         [ ] Parse break statements
+    @To-Do:         [✅] Parse break statements
                     [ ] Error recovery
 
     G:
@@ -28,7 +28,7 @@
         addop           :=   + | -
         relop           :=   ==|!=|<=|>=|>|<
         statement_list  :=   statement statement_list | <epsilon>
-        statement       :=   assign_stat; | decision_stat | looping_stat | SS
+        statement       :=   assign_stat; | decision_stat | looping_stat | SS | break; | continue;
         assign_stat     :=   id = expn
         decision_stat   :=   if ( expn ) {statement_list} dprime
         dprime          :=   else {statement_list} | <epsilon>
@@ -275,7 +275,6 @@ void looping_stat() {
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "(") != 0) {
             matchFlag = 0;
-<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
             reportError( __LINE__, lookahead, "Expected '('");
         }
         expn();
@@ -295,33 +294,11 @@ void looping_stat() {
             matchFlag = 0;
             reportError( __LINE__, lookahead, "Expected '}'");
         }
-=======
-            reportError(lookahead, "Expected '('");
-        }
-        expn();
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, ")") != 0) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected ')'");
-        }
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, "{") != 0) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected '{'");
-        }
-        statement_list();
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, "}") != 0) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected '}'");
-        }
->>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         return;
     } else if (strcmp(lookahead->lName, "for") == 0) {
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "(") != 0 ) {
             matchFlag = 0;
-<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
             reportError( __LINE__, lookahead, "Expected '('");
         }
         assign_stat();
@@ -347,42 +324,11 @@ void looping_stat() {
             matchFlag = 0;
             reportError( __LINE__, lookahead, "Expected '{'");
         }
-=======
-            reportError(lookahead, "Expected '('");
-        }
-        assign_stat();
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, ";") != 0 ) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected ';'");
-        }
-        expn();
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, ";") != 0 ) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected ';'");
-        }
-        assign_stat();
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, ")") != 0 ) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected ')'");
-        }
-        lookahead = getNextToken();
-        if (strcmp(lookahead->lName, "{") != 0 ) {
-            matchFlag = 0;
-            reportError(lookahead, "Expected '{'");
-        }
->>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         statement_list();
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "}") != 0 ) {
             matchFlag = 0;
-<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
             reportError( __LINE__, lookahead, "Expected '}'");
-=======
-            reportError(lookahead, "Expected '}'");
->>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         }
         return;
     } else {
@@ -488,7 +434,7 @@ void relop() {
 
 void statement_list() {
     lookahead = getNextToken();
-    if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 || strcmp(lookahead->lName, "if") == 0 || strcmp(lookahead->lName, "for") == 0 || strcmp(lookahead->lName, "while") == 0 || strcmp(lookahead->lName, "switch") == 0) {
+    if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 || strcmp(lookahead->lName, "if") == 0 || strcmp(lookahead->lName, "for") == 0 || strcmp(lookahead->lName, "while") == 0 || strcmp(lookahead->lName, "switch") == 0 || strcmp(lookahead->lName, "break") == 0 || strcmp(lookahead->lName, "continue") == 0) {
         retract();
         statement();
         statement_list();
@@ -522,6 +468,14 @@ void statement() {
         retract();
         SS();
         return;
+    } else if (strcmp(lookahead->lName, "break") == 0 || strcmp(lookahead->lName, "continue") == 0) {
+        lookahead = getNextToken();
+        if ( strcmp(lookahead->lName, ";") == 0) {
+            return;
+        } else {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ';'");
+        }
     } else {
         matchFlag = 0;
         reportError( __LINE__, lookahead, "Unexpected input");
