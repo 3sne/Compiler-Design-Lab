@@ -56,6 +56,7 @@ void printTokenList() {
     for ( int i = 0; i < tInd; i++ ) {
         printf("<%10s %10s %6d %3d %3d >\n", TokenList[i]->lName, TokenList[i]->tName, TokenList[i]->index, TokenList[i]->line, TokenList[i]->column);
     }
+    printf("=======EOTL (END OF TOKEN LIST)=======\n\n");
 }
 
 token* getNextToken() {
@@ -69,5 +70,7 @@ token* getNextToken() {
 void retract() {
     ctInd -= 1;
 }
+
+
 
 #endif

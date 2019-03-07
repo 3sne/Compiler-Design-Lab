@@ -1,14 +1,20 @@
 /*
     @Author:        3sne ( Mukur Panchani )
-    @FileName:      q1SwitchParser.c
-    @Task:          Parses Switch statements in C. Implemented as RDP using grammar G.
+    @FileName:      MalnourishedCParser.c
+    @Task:          Parses a very simple C program. Implemented as RDP using grammar G.
     @Dependency:    token.h tokenizer.exe input.txt
+    @To-Do:         [ ] Parse break statements
+                    [ ] Error recovery
 
     G:
+        program         :=   data_type main () { declarations statement_list }
+        declarations    :=   data_type identifier_list; declarations | <epsilon>
+        data_type       :=   int | char
+        identifier_list :=   id | id,identifier_list | id[num], identifier_list| id[num]
         SS              :=   switch ( expn ) { LSS }
         LSS             :=   label_stmt LSS | <epsilon>
-        label_stmt      :=   case num: stmtlist
-                           | default: stmtlist
+        label_stmt      :=   case num: statement_list
+                           | default: statement_list
         looping_stat    :=   while (expn) {statement_list} 
                            | for (assign_stat ; expn ; assign_stat ) {statement_list}
         expn            :=   simple_expn eprime
@@ -22,68 +28,61 @@
         addop           :=   + | -
         relop           :=   ==|!=|<=|>=|>|<
         statement_list  :=   statement statement_list | <epsilon>
-        statement       :=   assign_stat; | decision_stat | looping_stat | break;
+        statement       :=   assign_stat; | decision_stat | looping_stat | SS
         assign_stat     :=   id = expn
         decision_stat   :=   if ( expn ) {statement_list} dprime
         dprime          :=   else {statement_list} | <epsilon>
 */
 
+
+//directives
 #include "token.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
+
+//Globals
 int matchFlag = 1;
 token* lookahead;
-
-void reportError(token* tok, char *errMsg);
-void SS();              /* 1 */
-void LSS();             /* 2 */
-void label_stmt();      /* 3 */
-void looping_stat();    /* 4 */
-void expn();            /* 5 */
-void simple_expn();     /* 6 */
-void eprime();          /* 7 */
-void term();            /* 8 */
-void factor();          /* 9 */
-void tprime();          /* 10 */
-void mulop();           /* 11 */
-void seprime();         /* 12 */
-void addop();           /* 13 */
-void relop();           /* 14 */
-void statement_list();  /* 15 */
-void statement();       /* 16 */
-void assign_stat();     /* 17 */
-void decision_stat();   /* 18 */
-void dprime();          /* 19 */
+int DEBUGMODE = 0;
 
 
-void reportError(token* tok, char *errMsg) {
-    char *finalStr = (char*)malloc(sizeof(char) * 1024);
-    char *lineNumber = (char*)malloc(sizeof(char) * 16);
-    char *columnNumber = (char*)malloc(sizeof(char) * 16);
-    sprintf(lineNumber, "%d", tok->line);
-    sprintf(columnNumber, "%d", tok->column);
-    strcpy(finalStr, "[!]PARSE_ERROR @ {Line:Col}={");
-    strcat(finalStr, lineNumber);
-    strcat(finalStr, ":");
-    strcat(finalStr, columnNumber);
-    strcat(finalStr, "} >> ");
-    strcat(finalStr, errMsg);
-    strcat(finalStr, " | Got: '");
-    strcat(finalStr, tok->lName);
-    strcat(finalStr, "'");
-    fprintf(stderr, "%s\n", finalStr);
-    free(finalStr);
-    free(lineNumber);
-    free(columnNumber);
-}
+//Prototypes
+void reportError(int l_no, token* tok, char *errMsg);
+void program();
+void declarations();
+void data_type();
+void identifier_list();
+void SS();
+void LSS();
+void label_stmt();
+void looping_stat();
+void expn();
+void simple_expn();
+void eprime();
+void term();
+void factor();
+void tprime();
+void mulop();
+void seprime();
+void addop();
+void relop();
+void statement_list();
+void statement();
+void assign_stat();
+void decision_stat();
+void dprime();
 
+
+//main
 int main () {
+    printf("Run in DEBUG MODE? Yes(1) | No(0) >> ");
+    scanf("%d", &DEBUGMODE);
     setupTokenList();
-    printTokenList();
-    SS();
+    if (DEBUGMODE) printTokenList();
+    program();
     lookahead = getNextToken(); //to confirm all tokens are acutally exhausted via EOTL($). Otherwise, partial matches.
     if ( matchFlag && strcmp(lookahead->tName, "EOTL") == 0 ) {
         printf("Verdict: ACCEPTED.");
@@ -91,6 +90,95 @@ int main () {
         printf("Verdict: DENIED.");
     }
     return 0;
+}
+
+/* 
+    RDP production functions below this.
+ */
+void program() {
+    data_type();
+    lookahead = getNextToken();
+    if(strcmp(lookahead->lName, "main") != 0 ) {
+        reportError( __LINE__, lookahead, "Expected `main`");
+        matchFlag = 0;
+    }
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->lName, "(") != 0 ) {
+        reportError( __LINE__, lookahead, "Expected '('");
+        matchFlag = 0;
+    }
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->lName, ")") != 0 ) {
+        reportError( __LINE__, lookahead, "Expected ')'");
+        matchFlag = 0;
+    }
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->lName, "{") != 0 ) {
+        reportError( __LINE__, lookahead, "Expected '{'");
+        matchFlag = 0;
+    }
+    declarations();
+    statement_list();
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->lName, "}") != 0 ) {
+        reportError( __LINE__, lookahead, "Expected '}'");
+        matchFlag = 0;
+    }
+}
+
+void declarations() {
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->lName, "int") == 0 || strcmp(lookahead->lName, "char") == 0) {
+        retract();
+        data_type();
+        identifier_list();
+        lookahead = getNextToken();
+        if ( strcmp(lookahead->lName, ";") != 0 ) {
+            reportError( __LINE__, lookahead, "Expected ';'");
+            matchFlag = 0;
+        }
+        declarations();
+        return;
+    }
+    retract();
+}
+
+void data_type() {
+    lookahead = getNextToken();
+    if (strcmp(lookahead->lName, "int") != 0 && strcmp(lookahead->lName, "char") != 0) {
+        reportError( __LINE__, lookahead, "Expected data-type");
+        matchFlag = 0;
+    }
+}
+void identifier_list() {
+    lookahead = getNextToken();
+    if ( strcmp(lookahead->tName, "IDENTIFIER") != 0) {
+        matchFlag = 0;
+        reportError( __LINE__, lookahead, "Expected IDENTIFIER");
+    }
+    lookahead = getNextToken();
+    if (strcmp(lookahead->lName, ",") == 0) {
+        identifier_list();
+    } else if (strcmp(lookahead->lName, "[") == 0) {
+        lookahead = getNextToken();
+        if ( strcmp(lookahead->tName, "NUMBER") != 0 ) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected NUMBER");
+        }
+        lookahead = getNextToken();
+        if( strcmp(lookahead->lName, "]") != 0) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ']'");
+        }
+        lookahead = getNextToken();
+        if( strcmp(lookahead->lName, ",") == 0) {
+            identifier_list();
+            return;
+        }
+        retract();
+    } else {
+        retract();
+    }
 }
 
 void SS() {
@@ -109,22 +197,22 @@ void SS() {
                         return;
                     } else {
                         matchFlag = 0;
-                        reportError(lookahead, "Expected '}'");
+                        reportError( __LINE__, lookahead, "Expected '}'");
                         return;
                     }
                 } else {
                     matchFlag = 0;
-                    reportError(lookahead, "Expected '{'");
+                    reportError( __LINE__, lookahead, "Expected '{'");
                     return;
                 }
             } else {
                 matchFlag = 0;
-                reportError(lookahead, "Expected ')'");
+                reportError( __LINE__, lookahead, "Expected ')'");
                 return;
             }
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected '('");
+            reportError( __LINE__, lookahead, "Expected '('");
             return;
         }
     } else {
@@ -156,12 +244,12 @@ void label_stmt() {
                 return;
             } else {
                 matchFlag = 0;
-                reportError(lookahead, "Expected ':'");
+                reportError( __LINE__, lookahead, "Expected ':'");
                 return;
             }
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected NUMBER");
+            reportError( __LINE__, lookahead, "Expected NUMBER");
             return;
         }
     } else if (strcmp(lookahead->lName, "default") == 0) {
@@ -171,23 +259,43 @@ void label_stmt() {
             return;
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected ':'");
+            reportError( __LINE__, lookahead, "Expected ':'");
             return;
         }
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected 'case' or 'default'");
+        reportError( __LINE__, lookahead, "Expected 'case' or 'default'");
         return;
     }
 }
 
-/* 1 */
 void looping_stat() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "while") == 0 ) {
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "(") != 0) {
             matchFlag = 0;
+<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
+            reportError( __LINE__, lookahead, "Expected '('");
+        }
+        expn();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ")") != 0) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ')'");
+        }
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "{") != 0) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected '{'");
+        }
+        statement_list();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "}") != 0) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected '}'");
+        }
+=======
             reportError(lookahead, "Expected '('");
         }
         expn();
@@ -207,11 +315,39 @@ void looping_stat() {
             matchFlag = 0;
             reportError(lookahead, "Expected '}'");
         }
+>>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         return;
     } else if (strcmp(lookahead->lName, "for") == 0) {
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "(") != 0 ) {
             matchFlag = 0;
+<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
+            reportError( __LINE__, lookahead, "Expected '('");
+        }
+        assign_stat();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ";") != 0 ) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ';'");
+        }
+        expn();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ";") != 0 ) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ';'");
+        }
+        assign_stat();
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, ")") != 0 ) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected ')'");
+        }
+        lookahead = getNextToken();
+        if (strcmp(lookahead->lName, "{") != 0 ) {
+            matchFlag = 0;
+            reportError( __LINE__, lookahead, "Expected '{'");
+        }
+=======
             reportError(lookahead, "Expected '('");
         }
         assign_stat();
@@ -237,33 +373,35 @@ void looping_stat() {
             matchFlag = 0;
             reportError(lookahead, "Expected '{'");
         }
+>>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         statement_list();
         lookahead = getNextToken();
         if (strcmp(lookahead->lName, "}") != 0 ) {
             matchFlag = 0;
+<<<<<<< HEAD:Lab6/q1+2/MalnourishedCParser.c
+            reportError( __LINE__, lookahead, "Expected '}'");
+=======
             reportError(lookahead, "Expected '}'");
+>>>>>>> 324d9afc4f68107ebc836cca1ae82e406d1842e6:Lab6/q1/q1SwitchParser.c
         }
         return;
     } else {
         matchFlag = 0;
-        printf("e2\n");
+        printf("%s e2\n", lookahead->lName);
         return;
     }
 }
 
-/* 2 */
 void expn() {
     simple_expn();
     eprime();
 }
 
-/* 3 */
 void simple_expn() {
     term();
     seprime();
 }
 
-/* 4 */
 void eprime() {
     lookahead = getNextToken();
     if ( strcmp(lookahead->tName, "RLOP") == 0) {
@@ -275,25 +413,22 @@ void eprime() {
     retract();
 }
 
-/* 5 */
 void term() {
     factor();
     tprime();
 }
 
-/* 6 */
 void factor() {
     lookahead = getNextToken();
     if (strcmp(lookahead->tName, "IDENTIFIER") == 0 || strcmp(lookahead->tName, "NUMBER") == 0) {
         return;
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected IDENTIFIER OR NUMBER");
+        reportError( __LINE__, lookahead, "Expected IDENTIFIER OR NUMBER");
         return;
     }
 }
 
-/* 7 */
 void tprime() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "*") == 0 || strcmp(lookahead->lName, "/") == 0 ) {
@@ -306,19 +441,17 @@ void tprime() {
     retract();
 }
 
-/* 8 */
 void mulop() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "*") == 0 || strcmp(lookahead->lName, "/") == 0 ) {
         return;
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected '*' or '/'");
+        reportError( __LINE__, lookahead, "Expected '*' or '/'");
         return;
     }
 }
 
-/* 9 */
 void seprime() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "+") == 0 || strcmp(lookahead->lName, "-") == 0 ) {
@@ -331,34 +464,31 @@ void seprime() {
     retract();
 }
 
-/* 10 */
 void addop() {
     lookahead = getNextToken();
     if (strcmp(lookahead->lName, "+") == 0 || strcmp(lookahead->lName, "-") == 0 ) {
         return;
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected '+' or '-'");
+        reportError( __LINE__, lookahead, "Expected '+' or '-'");
         return;
     }
 }
 
-/* 11 */
 void relop() {
     lookahead = getNextToken();
     if ( strcmp(lookahead->tName, "RLOP") == 0) {
         return;
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected RELOP");
+        reportError( __LINE__, lookahead, "Expected RELOP");
         return;
     }
 }
 
-/* 12 */
 void statement_list() {
     lookahead = getNextToken();
-    if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 || strcmp(lookahead->lName, "if") == 0 || strcmp(lookahead->lName, "for") == 0 || strcmp(lookahead->lName, "while") == 0) {
+    if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 || strcmp(lookahead->lName, "if") == 0 || strcmp(lookahead->lName, "for") == 0 || strcmp(lookahead->lName, "while") == 0 || strcmp(lookahead->lName, "switch") == 0) {
         retract();
         statement();
         statement_list();
@@ -367,7 +497,6 @@ void statement_list() {
     retract();
 }
 
-/* 13 */
 void statement() {
     lookahead = getNextToken();
     if (strcmp(lookahead->tName, "IDENTIFIER") == 0) {
@@ -378,7 +507,7 @@ void statement() {
             return;
         } else { //error missing ";"
             matchFlag = 0;
-            reportError(lookahead, "Expected ';'");
+            reportError( __LINE__, lookahead, "Expected ';'");
             return;
         }
     } else if (strcmp(lookahead->lName, "if") == 0) {
@@ -389,14 +518,17 @@ void statement() {
         retract();
         looping_stat();
         return;
+    } else if (strcmp(lookahead->lName, "switch") == 0) {
+        retract();
+        SS();
+        return;
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Unexpected input");
+        reportError( __LINE__, lookahead, "Unexpected input");
         return;
     }
 }
 
-/* 14 */
 void assign_stat() {
     lookahead = getNextToken();
     if ( strcmp(lookahead->tName, "IDENTIFIER") == 0 ) {
@@ -405,17 +537,16 @@ void assign_stat() {
             expn();
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected '='");            
+            reportError( __LINE__, lookahead, "Expected '='");            
             return;
         }
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected IDENTIFIER");
+        reportError( __LINE__, lookahead, "Expected IDENTIFIER");
         return;
     }
 }
 
-/* 15 */
 void decision_stat() {
     lookahead = getNextToken();
     if ( strcmp(lookahead->lName, "if") == 0 ) {
@@ -433,32 +564,31 @@ void decision_stat() {
                         return;
                     } else {
                         matchFlag = 0;
-                        reportError(lookahead, "Expected '}'");
+                        reportError( __LINE__, lookahead, "Expected '}'");
                         return;
                     }
                 } else {
                     matchFlag = 0;
-                    reportError(lookahead, "Expected '{'");
+                    reportError( __LINE__, lookahead, "Expected '{'");
                     return;
                 }
             } else {
                 matchFlag = 0;
-                reportError(lookahead, "Expected ')'");
+                reportError( __LINE__, lookahead, "Expected ')'");
                 return;
             }
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected '('");
+            reportError( __LINE__, lookahead, "Expected '('");
             return;
         }
     } else {
         matchFlag = 0;
-        reportError(lookahead, "Expected 'if'");
+        reportError( __LINE__, lookahead, "Expected 'if'");
         return;
     }
 }
 
-/* 16 */
 void dprime() {
     lookahead = getNextToken();
     if ( strcmp(lookahead->lName, "else") == 0 ) {
@@ -470,15 +600,28 @@ void dprime() {
                 return;
             } else {
                 matchFlag = 0;
-                reportError(lookahead, "Expected '}'");
+                reportError( __LINE__, lookahead, "Expected '}'");
                 return;
             }
         } else {
             matchFlag = 0;
-            reportError(lookahead, "Expected '{'");
+            reportError( __LINE__, lookahead, "Expected '{'");
             return;
         }
         return;
     }
     retract();
+}
+
+// Error reporting / debug utility function
+void reportError(int l_no, token* tok, char *errMsg) { //, int l_no, int debug) {
+    (DEBUGMODE > 0) ? (DEBUGMODE = 1) : (DEBUGMODE = 0);
+    char *finalStr = (char*)malloc(sizeof(char) * 1024);
+    if (DEBUGMODE) {
+        sprintf(finalStr, "[DEBUG: %d] [!] PARSE_ERROR @ {Line:Col}={%d:%d} >> %s | Got: '%s'", l_no, tok->line, tok->column, errMsg, tok->lName);
+    } else {
+        sprintf(finalStr, "[!ERROR!] PARSE_ERROR @ {Line:Col}={%d:%d} >> %s | Got: '%s'", tok->line, tok->column, errMsg, tok->lName);
+    }
+    fprintf(stderr, "%s\n", finalStr);
+    free(finalStr);
 }

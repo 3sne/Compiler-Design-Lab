@@ -1,0 +1,46 @@
+//Should accept this boi
+int main() {
+    int t, a[10], x, i, b, c;
+    switch (x == 0) {
+        case 0: if (a == 2) {
+                    a = a + 2;
+                }
+        
+        case 1: while (1 == 1) {
+                    i = 2 + a / x;
+                }
+
+        case 2: for( i = 0; i < 10; i = i + 1) {
+                    c = c * 1;
+                }
+
+        default: if ( b == 2) {
+                    b = b * 2;
+                }
+    }
+}
+
+/*
+    Should reject this boi:
+    
+    int main() {
+    int t, a[a];
+    switch (x == 0) {
+        case 0: if (a == 2) {
+                    a = a + 2;
+                }
+        
+        case 1: while 1 == 1) {
+                    i = 2 + a / x;
+                }
+
+        case 2: for( i = 0, i < 10; i = i + 1) {
+                    c = c * 1;
+                }
+
+        default: if ( b == 2) {
+                    b = b * 2;
+                }
+    }
+}
+*/
