@@ -1,0 +1,21 @@
+int main () {
+    int a,b[10],c;
+    int d;
+    c=20;
+    d=30;
+    if(a == c){
+        b=a+c;
+    }
+    for(i=0;i<=n;i=i+1){
+        if(b>c){
+            a=b;
+        } else {
+            c=b;
+        }
+    }
+
+    while(a!=b) {
+        d=a;
+    }
+}
+//Compile: bison -d lalr_parser.y; flex tokenizer.l;  gcc lex.yy.c lalr_parser.tab.c; rm lex.yy.c lalr_parser.tab.h lalr_parser.tab.c
